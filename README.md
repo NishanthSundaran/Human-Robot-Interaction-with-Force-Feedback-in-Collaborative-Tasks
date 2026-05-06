@@ -2,12 +2,34 @@
 
 Master's thesis code by **Nishanth Sundaran**.
 
-This repository contains the ROS 2 Humble code for a force-feedback-based
-human-robot interaction system on a UR3e collaborative robot. The system
-demonstrates an *assistive lift* task where the robot picks an object,
-hands it off to a human via admittance-based hand-guiding, and places it
-at the human-chosen location — using force/torque feedback as the primary
-interaction modality.
+ROS 2 Humble implementation of a force-feedback-driven human-robot
+interaction system on a Universal Robots UR3e collaborative robot. The
+robot autonomously perceives and picks an object from a worktable, then
+**hands it off to a human via admittance-based hand-guiding** — letting
+the human physically pull the held object to any reachable target. A
+double-tap on the gripper signals "place here" and the robot completes
+the placement. A YOLOv8-segmentation pipeline keeps any human in the
+camera's view from polluting MoveIt's collision OctoMap, so the planner
+treats the static workspace correctly while ignoring the operator.
+
+The system covers all four thesis objectives: (1) safe HRI control using
+the UR3e's built-in F/T sensor, (2) ROS 2 + MoveIt 2 motion planning
+integration, (3) real-time force-feedback algorithms (hybrid position +
+admittance control with adaptive damping, intent amplification, and
+hysteretic contact detection), and (4) a validated end-to-end use case
+(collaborative pick-and-place / assistive lift).
+
+## Demo
+
+<video src="media/hri_demo.webm" controls width="640">
+  Your browser cannot render embedded video.
+  <a href="media/hri_demo.webm">Download / watch the demo (webm)</a>
+</video>
+
+> If the embedded player does not render in your viewer, the file is
+> available at [`media/hri_demo.webm`](media/hri_demo.webm).
+> The demo shows the full task on real hardware: perception → grasp →
+> lift → human-guided placement → double-tap → placement → home.
 
 ## Hardware
 
