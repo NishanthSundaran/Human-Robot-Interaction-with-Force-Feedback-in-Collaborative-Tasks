@@ -37,6 +37,9 @@ setup(
             'human_excluded_cloud_filter = my_thesis_controller.human_excluded_cloud_filter:main',
             'robotiq_urscript_bridge = my_thesis_controller.robotiq_urscript_bridge:main',
             'assistive_lift_v4 = my_thesis_controller.assistive_lift_v4_node:main',
+            'box_detector = my_thesis_controller.box_detector_node:main',
+            'nudge_pause_supervisor = my_thesis_controller.nudge_pause_supervisor:main',
+            'handeye_calibration = my_thesis_controller.handeye_calibration_node:main',
             # Debug / tuning tools
             'force_gui = my_thesis_controller.force_gui:main',
             'hybrid_tuning_gui = my_thesis_controller.hybrid_tuning_gui:main',
