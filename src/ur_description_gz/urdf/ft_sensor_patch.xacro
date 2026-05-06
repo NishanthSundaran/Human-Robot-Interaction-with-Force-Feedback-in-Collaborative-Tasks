@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Inserts FT sensor into UR3e wrist joint -->
+  <xacro:macro name="inject_ft_sensor" params="joint_name">
+
+    <gazebo reference="${joint_name}">
+      <sensor name="tcp_fts_sensor" type="force_torque">
+        <always_on>true</always_on>
+        <update_rate>500</update_rate>
+        <visualize>true</visualize>
+        <topic>force_torque</topic>
+        <force_torque>
+          <frame>child</frame>
+          <measure_direction>child_to_parent</measure_direction>
+        </force_torque>
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>
+

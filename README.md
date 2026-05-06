@@ -19,6 +19,7 @@ interaction modality.
 ## Repository layout
 
 ```
+robot_calibration.yaml             # Hand-eye + UR3e DH calibration (referenced at launch)
 src/
 ├── my_thesis_controller/        # Custom thesis nodes
 │   ├── my_thesis_controller/
@@ -33,23 +34,35 @@ src/
 │   │   ├── assistive_lift_v4_node.py         # Top-level FSM: pick → guide → place
 │   │   ├── human_excluded_cloud_filter.py    # YOLOv8-seg: drop human pixels from cloud
 │   │   ├── octomap_gate.py                   # Block cloud during GUIDING (clears OctoMap)
+│   │   ├── force_gui.py                      # tkinter wrench-injection GUI (debug)
+│   │   ├── hybrid_tuning_gui.py              # Live tuning sliders (debug)
+│   │   ├── safety_monitor.py                 # ISO/TS 15066 PFL + SSM monitor (debug)
 │   │   └── __init__.py
 │   ├── rviz/
 │   │   ├── view_robot.rviz                   # Hardware RViz config
 │   │   └── hri_sim.rviz                      # Sim HRI RViz config
 │   ├── package.xml
 │   └── setup.py
-└── ur3e_moveit_config/          # MoveIt 2 + launch files
-    ├── config/                  # MoveIt configs (servo, kinematics, planners, OctoMap)
-    ├── launch/
-    │   ├── assistive_lift_v4_hardware.launch.py       # Real UR3e (no human-pipeline)
-    │   ├── assistive_lift_v4_hardware_hri.launch.py   # Real UR3e + human exclusion
-    │   └── assistive_lift_v4_hri_sim.launch.py        # Gazebo Ignition sim + HRI
-    ├── srdf/ur3e.srdf.xacro
-    ├── worlds/
-    │   └── assistive_lift_world_hri.sdf               # Gazebo world (walking actor)
+├── ur3e_moveit_config/          # MoveIt 2 + launch files
+│   ├── config/                  # MoveIt configs (servo, kinematics, planners, OctoMap, ros2_controllers)
+│   ├── launch/
+│   │   ├── assistive_lift_v4_hardware.launch.py       # Real UR3e (no human-pipeline)
+│   │   ├── assistive_lift_v4_hardware_hri.launch.py   # Real UR3e + human exclusion
+│   │   └── assistive_lift_v4_hri_sim.launch.py        # Gazebo Ignition sim + HRI
+│   ├── srdf/ur3e.srdf.xacro
+│   ├── worlds/
+│   │   └── assistive_lift_world_hri.sdf               # Gazebo world (walking actor)
+│   ├── package.xml
+│   └── CMakeLists.txt
+└── ur_description_gz/           # Customized fork of UR description (UR3e + camera mount)
+    ├── urdf/                    # ur.urdf.xacro, ur_hardware.urdf.xacro, macros, includes
+    ├── config/ur3e/             # joint_limits, default_kinematics, physical/visual params
+    ├── meshes/ur3e/             # Visual + collision meshes (UR3e only — other variants pruned)
     ├── package.xml
     └── CMakeLists.txt
+scripts/
+├── calibrate_doubletap.py       # 5-round nudge calibration tool
+└── test_doubletap.py            # double-tap verifier
 ```
 
 ## System architecture
@@ -114,10 +127,9 @@ These are not included in this repo; clone them from upstream:
 
 | Package                                 | Purpose                                          |
 |-----------------------------------------|--------------------------------------------------|
-| `Universal_Robots_ROS2_Description`     | UR robot URDF / meshes (used for sim and viz)    |
 | `Universal_Robots_ROS2_Driver`          | UR hardware driver, `ur_control.launch.py`       |
 | `robot_self_filter`                     | Removes robot links from RealSense point cloud   |
-| `ros2_robotiq_gripper`                  | Robotiq URDF (referenced from UR description)    |
+| `ros2_robotiq_gripper`                  | Robotiq description (referenced from URDF)       |
 
 A `dependencies.repos` file is included for `vcs import`:
 
@@ -125,10 +137,9 @@ A `dependencies.repos` file is included for `vcs import`:
 vcs import src < dependencies.repos
 ```
 
-> **Note**: the launches reference a forked package called `ur_description_gz`
-> with custom camera-mount geometry (D435i hand-eye fixture). If the upstream
-> `Universal_Robots_ROS2_Description` is used as-is, you may need to provide
-> a static TF for the camera or supply your own description package.
+> `ur_description_gz` is **bundled** in this repo as a customized fork with
+> hand-eye-mounted RealSense D435i and FT-sensor patch. To minimize size,
+> only UR3e meshes are included (UR5e/UR10e/etc. are pruned).
 
 ## Build
 

@@ -1,0 +1,266 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)">
+   <!-- robot name parameter -->
+   <xacro:arg name="name" default="ur"/>
+   <!-- import main macro -->
+   <xacro:include filename="$(find ur_description_gz)/urdf/ur_macro.xacro"/>
+   <xacro:include filename="$(find ur_description_gz)/urdf/ft_sensor_patch.xacro"/>
+   <xacro:include filename="$(find robotiq_description)/urdf/robotiq_2f_140_macro.urdf.xacro"/>
+   <xacro:include filename="$(find robotiq_description)/urdf/2f_140.ros2_control.xacro"/>
+   <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
+
+   <!-- possible 'ur_type' values: ur3, ur5, ur10, ur3e, ur5e, ur7e, ur10e, ur12e, ur16e, ur8long, ur15, ur18, ur20, ur30 -->
+   <!-- the default value should raise an error in case this was called without defining the type -->
+   <xacro:arg name="ur_type" default="ur3e"/>
+   <xacro:arg name="q_shoulder_pan"  default="0.0"/>
+   <xacro:arg name="q_shoulder_lift" default="-1.2"/>
+   <xacro:arg name="q_elbow"         default="1.0"/>
+   <xacro:arg name="q_wrist_1"       default="-1.37"/>
+   <xacro:arg name="q_wrist_2"       default="-1.57"/>
+   <xacro:arg name="q_wrist_3"       default="0.0"/>
+
+   <!-- parameters -->
+   <xacro:arg name="tf_prefix" default="" />
+   <xacro:arg name="joint_limit_params" default="$(find ur_description_gz)/config/$(arg ur_type)/joint_limits.yaml"/>
+   <xacro:arg name="kinematics_params" default="$(find ur_description_gz)/config/$(arg ur_type)/default_kinematics.yaml"/>
+   <xacro:arg name="physical_params" default="$(find ur_description_gz)/config/$(arg ur_type)/physical_parameters.yaml"/>
+   <xacro:arg name="visual_params" default="$(find ur_description_gz)/config/$(arg ur_type)/visual_parameters.yaml"/>
+   <xacro:arg name="transmission_hw_interface" default=""/>
+   <xacro:arg name="safety_limits" default="true"/>
+   <xacro:arg name="safety_pos_margin" default="0.15"/>
+   <xacro:arg name="safety_k_position" default="20"/>
+
+   <!--When using gazebo simulations absolute paths are necessary.-->
+   <xacro:arg name="force_abs_paths" default="false" />
+   <xacro:arg name="sim_ignition" default="false"/>
+   <xacro:arg name="sim_gazebo" default="false"/>
+   <xacro:arg name="use_fake_hardware" default="false"/>
+   <xacro:arg name="robotiq_ros2_control" default="false"/>
+   <xacro:arg name="robotiq_com_port" default="/tmp/ttyUR"/>
+   <xacro:arg name="sim" default="gz"/>
+
+   <!-- create link fixed to the "world" -->
+   <link name="world" />
+
+   <!-- arm -->
+   <xacro:ur_robot
+     name="$(arg name)"
+     tf_prefix="$(arg tf_prefix)"
+     parent="world"
+     joint_limits_parameters_file="$(arg joint_limit_params)"
+     kinematics_parameters_file="$(arg kinematics_params)"
+     physical_parameters_file="$(arg physical_params)"
+     visual_parameters_file="$(arg visual_params)"
+     safety_limits="$(arg safety_limits)"
+     safety_pos_margin="$(arg safety_pos_margin)"
+     safety_k_position="$(arg safety_k_position)"
+     force_abs_paths="$(arg force_abs_paths)"
+     sim_gazebo="$(arg sim_gazebo)"
+     use_fake_hardware="$(arg use_fake_hardware)"
+     >
+     <origin xyz="0 0 0" rpy="0 0 1.5708" />      <!-- rotate robot 90° so arm faces workspace -->
+   </xacro:ur_robot>
+   
+     <!-- Robotiq 2F-140 gripper -->
+     <!-- Build the 2F-140 model -->
+   <xacro:robotiq_gripper
+     name="Robotiq2F140"
+     prefix="robotiq_140_"
+     parent="tool0"
+     include_ros2_control="$(arg robotiq_ros2_control)"
+     use_fake_hardware="$(arg use_fake_hardware)"
+     com_port="$(arg robotiq_com_port)"
+     sim_gazebo="$(arg sim_gazebo)">
+     <origin xyz="0 0 0" rpy="0 0 0"/>
+   </xacro:robotiq_gripper>
+  <xacro:arg name="sim" default="gz"/>  <!-- gz or classic -->
+  <xacro:arg name="include_camera" default="true"/>
+
+  <!-- 2. Fixed stand above workspace (sim only — hardware uses static TF + RealSense driver) -->
+  <xacro:if value="$(arg include_camera)">
+  <link name="camera_stand"/>
+  <joint name="camera_stand_joint" type="fixed">
+    <parent link="world"/>
+    <child link="camera_stand"/>
+    <!-- Camera stand rotated 90° further (world -X side), 98cm above base -->
+    <!-- Facing back toward robot, tilted 0.63 rad down -->
+    <origin xyz="-1.14 0.0 0.98" rpy="0.0 0.63 0.0"/>
+  </joint>
+
+  <!-- 3. RealSense D435i, attached to stand -->
+  <xacro:sensor_d435i
+    parent="camera_stand"
+    name="camera"
+    use_nominal_extrinsics="true">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:sensor_d435i>
+  </xacro:if>
+
+   <xacro:inject_ft_sensor joint_name="wrist_3_joint"/>
+  <gazebo>
+    <plugin filename="libign_ros2_control-system.so" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+      <parameters>$(find ur3e_moveit_config)/config/ros2_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+   <!-- Depth Camera Sensor for Gazebo -->
+  <gazebo reference="camera_depth_frame">
+    <sensor name="depth_camera" type="rgbd_camera">
+      <topic>/realsense</topic>
+      <update_rate>30</update_rate>
+      <camera name="depth_camera">
+        <horizontal_fov>1.5184</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>5.0</far>
+        </clip>
+      </camera>
+      <always_on>1</always_on>
+      <visualize>false</visualize>
+    </sensor>
+  </gazebo>
+
+  
+  <ros2_control name="IgnitionSystem" type="system">
+  <hardware>
+    <plugin>ign_ros2_control/IgnitionSystem</plugin>
+  </hardware>
+
+  <joint name="shoulder_pan_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <state_interface name="position">
+      <param name="initial_value">$(arg q_shoulder_pan)</param>
+    </state_interface>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+
+  <joint name="shoulder_lift_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <state_interface name="position">
+      <param name="initial_value">$(arg q_shoulder_lift)</param>
+    </state_interface>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+
+  <joint name="elbow_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <state_interface name="position">
+      <param name="initial_value">$(arg q_elbow)</param>
+    </state_interface>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+
+  <joint name="wrist_1_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <state_interface name="position">
+      <param name="initial_value">$(arg q_wrist_1)</param>
+    </state_interface>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+
+  <joint name="wrist_2_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <state_interface name="position">
+      <param name="initial_value">$(arg q_wrist_2)</param>
+    </state_interface>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+
+  <joint name="wrist_3_joint">
+    <command_interface name="position"/>
+    <command_interface name="velocity"/>
+    <state_interface name="position">
+      <param name="initial_value">$(arg q_wrist_3)</param>
+    </state_interface>
+    <state_interface name="velocity"/>
+    <state_interface name="effort"/>
+  </joint>
+
+  <sensor name="tcp_fts_sensor">
+    <state_interface name="force.x"/>
+    <state_interface name="force.y"/>
+    <state_interface name="force.z"/>
+    <state_interface name="torque.x"/>
+    <state_interface name="torque.y"/>
+    <state_interface name="torque.z"/>
+  </sensor>
+
+  <joint name="robotiq_140_finger_joint">
+    <command_interface name="position"/>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+    <state_interface name="velocity">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+  <joint name="robotiq_140_left_inner_knuckle_joint">
+    <command_interface name="position"/>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+    <state_interface name="velocity">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+  <joint name="robotiq_140_left_inner_finger_joint">
+    <command_interface name="position"/>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+    <state_interface name="velocity">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+  <joint name="robotiq_140_right_outer_knuckle_joint">
+    <command_interface name="position"/>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+    <state_interface name="velocity">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+  <joint name="robotiq_140_right_inner_knuckle_joint">
+    <command_interface name="position"/>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+    <state_interface name="velocity">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+  <joint name="robotiq_140_right_inner_finger_joint">
+    <command_interface name="position"/>
+    <state_interface name="position">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+    <state_interface name="velocity">
+      <param name="initial_value">0.0</param>
+    </state_interface>
+  </joint>
+
+  
+  </ros2_control>
+
+
+  
+</robot>

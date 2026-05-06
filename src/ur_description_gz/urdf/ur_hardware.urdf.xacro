@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<!--
+  Hardware URDF for UR3e + Robotiq 2F-140 + RealSense D435i.
+
+  Uses the STANDARD ur_description ur_macro.xacro (which generates a proper
+  ros2_control block with the UR hardware interface plugin).  The Gazebo-only
+  ur_description_gz macro does NOT support hardware ros2_control, so we
+  cannot use it here.
+
+  Robotiq gripper is included with include_ros2_control="false" — its
+  HW interface needs /tmp/ttyUR which doesn't exist at startup.  Physical
+  gripper is controlled via robotiq_urscript_bridge node instead.
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)">
+
+   <!-- Standard UR macro (with hardware ros2_control support) -->
+   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
+   <!-- Robotiq gripper -->
+   <xacro:include filename="$(find robotiq_description)/urdf/robotiq_2f_140_macro.urdf.xacro"/>
+   <xacro:include filename="$(find robotiq_description)/urdf/2f_140.ros2_control.xacro"/>
+   <!-- RealSense camera -->
+   <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
+   <!-- FT sensor patch (Gazebo-only, harmless on hardware) -->
+   <xacro:include filename="$(find ur_description_gz)/urdf/ft_sensor_patch.xacro"/>
+
+   <!-- ================================================================= -->
+   <!-- Xacro args — must match what the UR driver launch passes          -->
+   <!-- ================================================================= -->
+   <xacro:arg name="name" default="ur"/>
+   <xacro:arg name="ur_type" default="ur3e"/>
+
+   <!-- Config file paths (UR driver overrides these via description_package) -->
+   <xacro:arg name="tf_prefix" default="" />
+   <xacro:arg name="joint_limit_params" default="$(find ur_description_gz)/config/$(arg ur_type)/joint_limits.yaml"/>
+   <xacro:arg name="kinematics_params" default="$(find ur_description_gz)/config/$(arg ur_type)/default_kinematics.yaml"/>
+   <xacro:arg name="physical_params" default="$(find ur_description_gz)/config/$(arg ur_type)/physical_parameters.yaml"/>
+   <xacro:arg name="visual_params" default="$(find ur_description_gz)/config/$(arg ur_type)/visual_parameters.yaml"/>
+   <xacro:arg name="transmission_hw_interface" default=""/>
+   <xacro:arg name="safety_limits" default="true"/>
+   <xacro:arg name="safety_pos_margin" default="0.15"/>
+   <xacro:arg name="safety_k_position" default="20"/>
+
+   <!-- ros2_control / hardware params -->
+   <xacro:arg name="headless_mode" default="false" />
+   <xacro:arg name="robot_ip" default="0.0.0.0" />
+   <xacro:arg name="script_filename" default=""/>
+   <xacro:arg name="output_recipe_filename" default=""/>
+   <xacro:arg name="input_recipe_filename" default=""/>
+   <xacro:arg name="reverse_ip" default="0.0.0.0"/>
+   <xacro:arg name="script_command_port" default="50004"/>
+   <xacro:arg name="reverse_port" default="50001"/>
+   <xacro:arg name="script_sender_port" default="50002"/>
+   <xacro:arg name="trajectory_port" default="50003"/>
+
+   <!-- Tool communication (needed for Robotiq via UR wrist) -->
+   <xacro:arg name="use_tool_communication" default="false" />
+   <xacro:arg name="tool_voltage" default="0" />
+   <xacro:arg name="tool_parity" default="0" />
+   <xacro:arg name="tool_baud_rate" default="115200" />
+   <xacro:arg name="tool_stop_bits" default="1" />
+   <xacro:arg name="tool_rx_idle_chars" default="1.5" />
+   <xacro:arg name="tool_tx_idle_chars" default="3.5" />
+   <xacro:arg name="tool_device_name" default="/tmp/ttyUR" />
+   <xacro:arg name="tool_tcp_port" default="54321" />
+
+   <!-- Simulation params -->
+   <xacro:arg name="use_fake_hardware" default="false" />
+   <xacro:arg name="fake_sensor_commands" default="false" />
+   <xacro:arg name="sim_gazebo" default="false" />
+   <xacro:arg name="sim_ignition" default="false" />
+   <xacro:arg name="simulation_controllers" default="" />
+
+   <!-- Initial positions (for fake/sim only) -->
+   <xacro:arg name="initial_positions_file" default="$(find ur_description_gz)/config/initial_positions.yaml"/>
+
+   <!-- Robotiq com port -->
+   <xacro:arg name="robotiq_com_port" default="/tmp/ttyUR"/>
+
+   <!-- ================================================================= -->
+   <!-- Properties                                                         -->
+   <!-- ================================================================= -->
+   <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
+
+   <!-- ================================================================= -->
+   <!-- World link                                                         -->
+   <!-- ================================================================= -->
+   <link name="world" />
+
+   <!-- ================================================================= -->
+   <!-- UR arm (standard macro — generates hardware ros2_control block)    -->
+   <!-- ================================================================= -->
+   <xacro:ur_robot
+     name="$(arg name)"
+     tf_prefix="$(arg tf_prefix)"
+     parent="world"
+     joint_limits_parameters_file="$(arg joint_limit_params)"
+     kinematics_parameters_file="$(arg kinematics_params)"
+     physical_parameters_file="$(arg physical_params)"
+     visual_parameters_file="$(arg visual_params)"
+     transmission_hw_interface="$(arg transmission_hw_interface)"
+     safety_limits="$(arg safety_limits)"
+     safety_pos_margin="$(arg safety_pos_margin)"
+     safety_k_position="$(arg safety_k_position)"
+     use_fake_hardware="$(arg use_fake_hardware)"
+     fake_sensor_commands="$(arg fake_sensor_commands)"
+     sim_gazebo="$(arg sim_gazebo)"
+     sim_ignition="$(arg sim_ignition)"
+     headless_mode="$(arg headless_mode)"
+     initial_positions="${xacro.load_yaml(initial_positions_file)}"
+     use_tool_communication="$(arg use_tool_communication)"
+     tool_voltage="$(arg tool_voltage)"
+     tool_parity="$(arg tool_parity)"
+     tool_baud_rate="$(arg tool_baud_rate)"
+     tool_stop_bits="$(arg tool_stop_bits)"
+     tool_rx_idle_chars="$(arg tool_rx_idle_chars)"
+     tool_tx_idle_chars="$(arg tool_tx_idle_chars)"
+     tool_device_name="$(arg tool_device_name)"
+     tool_tcp_port="$(arg tool_tcp_port)"
+     robot_ip="$(arg robot_ip)"
+     script_filename="$(arg script_filename)"
+     output_recipe_filename="$(arg output_recipe_filename)"
+     input_recipe_filename="$(arg input_recipe_filename)"
+     reverse_ip="$(arg reverse_ip)"
+     script_command_port="$(arg script_command_port)"
+     reverse_port="$(arg reverse_port)"
+     script_sender_port="$(arg script_sender_port)"
+     trajectory_port="$(arg trajectory_port)"
+     >
+     <!-- Rotate robot 90° so arm faces workspace (matches sim) -->
+     <origin xyz="0 0 0" rpy="0 0 1.5708" />
+   </xacro:ur_robot>
+
+   <!-- ================================================================= -->
+   <!-- Robotiq 2F-140 gripper (with its own ros2_control block)           -->
+   <!-- ================================================================= -->
+   <!-- Robotiq ros2_control is NOT included here — the RobotiqGripperHardwareInterface
+        needs /tmp/ttyUR which only exists after the UR driver connects.  Physical gripper
+        control is handled by the robotiq_urscript_bridge node instead. -->
+   <xacro:robotiq_gripper
+     name="Robotiq2F140"
+     prefix="robotiq_140_"
+     parent="tool0"
+     include_ros2_control="false"
+     use_fake_hardware="true"
+     sim_gazebo="$(arg sim_gazebo)">
+     <origin xyz="0 0 0" rpy="0 0 0"/>
+   </xacro:robotiq_gripper>
+
+   <!-- ================================================================= -->
+   <!-- Camera stand + RealSense D435i (sim only)                          -->
+   <!-- ================================================================= -->
+   <xacro:arg name="include_camera" default="true"/>
+   <xacro:if value="$(arg include_camera)">
+   <link name="camera_stand"/>
+   <joint name="camera_stand_joint" type="fixed">
+     <parent link="world"/>
+     <child link="camera_stand"/>
+     <origin xyz="-1.14 0.0 0.98" rpy="0.0 0.63 0.0"/>
+   </joint>
+
+   <xacro:sensor_d435i
+     parent="camera_stand"
+     name="camera"
+     use_nominal_extrinsics="true">
+     <origin xyz="0 0 0" rpy="0 0 0"/>
+   </xacro:sensor_d435i>
+   </xacro:if>
+
+   <!-- ================================================================= -->
+   <!-- FT sensor patch (adds Gazebo sensor plugin — no-op on hardware)    -->
+   <!-- ================================================================= -->
+   <xacro:inject_ft_sensor joint_name="wrist_3_joint"/>
+
+</robot>

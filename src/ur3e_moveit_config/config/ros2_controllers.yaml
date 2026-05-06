@@ -1,0 +1,120 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 500
+
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    force_torque_sensor_broadcaster:
+      type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
+
+    forward_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+    gripper_position_controller:
+      type: position_controllers/JointGroupPositionController
+    
+    robotiq_gripper_controller:
+      type: position_controllers/GripperActionController
+
+    robotiq_activation_controller:
+      type: robotiq_controllers/RobotiqActivationController
+    
+    robotiq_group_position_controller:
+      type: position_controllers/JointGroupPositionController
+
+    robotiq_finger_controller:
+      type: position_controllers/JointGroupPositionController
+
+# ---- Controller-specific parameters ----
+
+force_torque_sensor_broadcaster:
+  ros__parameters:
+    sensor_name: tcp_fts_sensor
+    state_interface_names:
+      - force.x
+      - force.y
+      - force.z
+      - torque.x
+      - torque.y
+      - torque.z
+    frame_id: ft_frame
+    topic_name: force_torque
+
+forward_velocity_controller:
+  ros__parameters:
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
+    interface_name: velocity
+
+
+robotiq_gripper_controller:
+  ros__parameters:
+    joint: robotiq_140_finger_joint
+
+    # Enable effort control (replacement for use_effort_interface)
+    max_effort_interface: robotiq_140_finger_joint/effort
+    max_effort: 50.0   # TODO tune
+
+    # Enable velocity/speed control (replacement for use_speed_interface)
+    max_velocity_interface: robotiq_140_finger_joint/velocity
+    max_velocity: 0.5    # TODO tune
+
+    # Optional (recommended)
+    allow_stalling: true
+    stall_timeout: 0.05
+    goal_tolerance: 0.02
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+
+robotiq_group_position_controller:
+  ros__parameters:
+    joints: 
+      - robotiq_140_finger_joint
+      - robotiq_140_left_inner_knuckle_joint
+      - robotiq_140_left_inner_finger_joint
+      - robotiq_140_right_outer_knuckle_joint
+      - robotiq_140_right_inner_knuckle_joint
+      - robotiq_140_right_inner_finger_joint
+    interface_name: position
+
+# Single-joint controller for hardware Robotiq (only finger_joint has HW interface)
+robotiq_finger_controller:
+  ros__parameters:
+    joints:
+      - robotiq_140_finger_joint
+    interface_name: position
+
+#robotiq_activation_controller:
+  #ros__parameters:
+    #default: true
+
+joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    allow_partial_joints_goal: false
+    constraints:
+      stopped_velocity_tolerance: 0.01
+      goal_time: 0.0
