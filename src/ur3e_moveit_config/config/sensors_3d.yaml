@@ -1,0 +1,11 @@
+sensors:
+  - point_cloud_sensor
+point_cloud_sensor:
+  sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+  point_cloud_topic: /cloud_gated
+  max_range: 2.5
+  padding_offset: 0.1
+  padding_scale: 1.0
+  point_subsample: 2
+  max_update_rate: 10.0
+  filtered_cloud_topic: /filtered_cloud_debug

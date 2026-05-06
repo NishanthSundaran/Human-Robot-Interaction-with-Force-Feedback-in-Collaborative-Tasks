@@ -1,0 +1,40 @@
+hybrid_control_node:
+  ros__parameters:
+    selection_matrix: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    mass_linear: 3.0
+    damping_linear: 60.0
+    mass_angular: 0.5
+    damping_angular: 8.0
+    guiding_damping_linear: 50.0
+    guiding_damping_angular: 6.0
+    #wrench conditioning
+    force_deadband: 3.0
+    torque_deadband: 0.2
+    alpha_wrench: 0.07
+    admittance_output_alpha: 0.25
+    # Stop drift when effectively "no contact"
+    stop_on_no_contact: true
+    stop_fx_epsilon: 0.5
+    stop_fy_epsilon: 0.5
+    stop_fz_epsilon: 0.5
+    stop_tx_epsilon: 0.1
+    stop_ty_epsilon: 0.1
+    stop_tz_epsilon: 0.1
+    # Smooth deceleration on force release (seconds)
+    no_contact_decay_tau: 0.05
+    # Tare/bias handling
+    tare_on_enable: false
+    wrench_frame: tool0
+    wrench_source_frame: ft_frame
+    #timing and safety
+    loop_rate: 500.0
+    max_linear_speed: 0.15
+    max_angular_speed: 0.5
+    # Acceleration rate limiter (jerk protection)
+    max_linear_accel: 0.5
+    max_angular_accel: 1.5
+    auto_bias_enable: true
+    auto_bias_beta: 0.002
+    auto_bias_force_thresh: 3.0
+    auto_bias_torque_thresh: 0.15
+    auto_bias_max_cmd_speed: 0.02

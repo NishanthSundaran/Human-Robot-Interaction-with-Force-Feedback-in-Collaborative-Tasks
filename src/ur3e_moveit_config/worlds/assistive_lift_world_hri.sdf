@@ -1,0 +1,164 @@
+<?xml version="1.0"?>
+<!--
+  HRI variant of assistive_lift_world.sdf:
+    - Identical to the original world (robot table, workspace table, grasp box)
+    - PLUS a walking actor used to exercise the YOLOv8-seg human-exclusion
+      filter in assistive_lift_v4_hri_sim.launch.py
+
+  The original ur_simulation_gazebo/worlds/assistive_lift_world.sdf is
+  intentionally NOT modified.
+
+  Mesh URL is the canonical Ignition Fortress walking actor (Mingfei). On
+  first run Ignition fetches it from Fuel — needs internet once. Subsequent
+  runs use the cached copy under ~/.ignition/fuel/.
+-->
+<sdf version="1.6">
+  <world name="assistive_lift_world_hri">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Required Ignition systems -->
+    <plugin filename="ignition-gazebo-forcetorque-system"
+            name="ignition::gazebo::systems::ForceTorque"/>
+    <plugin filename="ignition-gazebo-physics-system"
+            name="ignition::gazebo::systems::Physics"/>
+    <plugin filename="ignition-gazebo-user-commands-system"
+            name="ignition::gazebo::systems::UserCommands"/>
+    <plugin filename="ignition-gazebo-scene-broadcaster-system"
+            name="ignition::gazebo::systems::SceneBroadcaster"/>
+    <plugin filename="ignition-gazebo-contact-system"
+            name="ignition::gazebo::systems::Contact"/>
+    <plugin filename="ignition-gazebo-apply-link-wrench-system"
+            name="ignition::gazebo::systems::ApplyLinkWrench"/>
+    <plugin filename="ignition-gazebo-sensors-system"
+            name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="ignition-gazebo-imu-system"
+            name="ignition::gazebo::systems::Imu"/>
+
+    <!-- Sun -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Robot table -->
+    <model name="robot_table">
+      <static>true</static>
+      <pose>0 0 0.315 0 0 0</pose>
+      <link name="table_link">
+        <collision name="collision"><geometry><box><size>0.6 0.6 0.63</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.6 0.6 0.63</size></box></geometry>
+          <material>
+            <ambient>0.55 0.55 0.55 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Workspace table -->
+    <model name="workspace_table">
+      <static>true</static>
+      <pose>-0.6993 0 0.37 0 0 0</pose>
+      <link name="table_link">
+        <collision name="collision"><geometry><box><size>0.8 1.2 0.74</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.8 1.2 0.74</size></box></geometry>
+          <material>
+            <ambient>0.45 0.35 0.25 1</ambient>
+            <diffuse>0.55 0.40 0.28 1</diffuse>
+            <specular>0.2 0.15 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Grasp box -->
+    <model name="grasp_box">
+      <static>false</static>
+      <pose>-0.35 0.0 0.77 0 0 0</pose>
+      <link name="box_link">
+        <inertial>
+          <mass>0.15</mass>
+          <inertia>
+            <ixx>0.0000465</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.0000591</iyy><iyz>0</iyz>
+            <izz>0.0000381</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.065 0.03 0.06</size></box></geometry>
+          <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.065 0.03 0.06</size></box></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1</ambient>
+            <diffuse>1.0 0.0 0.0 1</diffuse>
+            <specular>0.3 0.0 0.0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!--
+      Walking actor (HRI test).
+      Camera is at world (-1.14, 0, 0.98), tilted 36° down, looking +X back
+      toward the robot. Camera ground intersection ≈ (+0.21, 0, 0).
+      Actor walks at x=+0.4 (just beyond the robot, well inside camera FoV),
+      y from -1.2 to +1.2, period ~10 s. Mesh fetched from Gazebo Fuel.
+    -->
+    <actor name="hri_actor">
+      <pose>0.4 1.2 0.5 0 0 -1.5708</pose>
+      <skin>
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <animation name="walk">
+        <filename>https://fuel.gazebosim.org/1.0/Mingfei/models/actor/tip/files/meshes/walk.dae</filename>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <delay_start>0.0</delay_start>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="walking">
+          <waypoint><time>0</time>   <pose>0.4  1.2 0.5 0 0 -1.5708</pose></waypoint>
+          <waypoint><time>5</time>   <pose>0.4 -1.2 0.5 0 0 -1.5708</pose></waypoint>
+          <waypoint><time>5.2</time> <pose>0.4 -1.2 0.5 0 0  1.5708</pose></waypoint>
+          <waypoint><time>10</time>  <pose>0.4  1.2 0.5 0 0  1.5708</pose></waypoint>
+          <waypoint><time>10.2</time><pose>0.4  1.2 0.5 0 0 -1.5708</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+  </world>
+</sdf>

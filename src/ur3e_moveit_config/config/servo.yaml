@@ -1,0 +1,61 @@
+servo_node:
+  ros__parameters:
+    moveit_servo:
+      # --- fingerprint (to prove which yaml got loaded) ---
+      debug_yaml_id: 12345
+
+      command_in_type: "speed_units"
+
+      scale:
+        linear: 0.6
+        rotational: 0.3
+        joint: 0.01
+
+      publish_period: 0.034
+      command_out_type: "std_msgs/Float64MultiArray"
+      command_out_topic: "/forward_velocity_controller/commands"
+
+      move_group_name: "ur3e_manipulator"
+      planning_frame: "base_link"
+      robot_link_command_frame: "base_link"
+      ee_frame_name: "tool0"
+
+      cartesian_command_in_topic: "~/delta_twist_cmds"
+      joint_command_in_topic: "~/delta_joint_cmds"
+      joint_topic: "/joint_states"
+      status_topic: "~/status"
+
+      # IMPORTANT: for a velocity controller, choose only velocities
+      publish_joint_positions: false
+      publish_joint_velocities: true
+      publish_joint_accelerations: false
+
+      # COLLISION SETTINGS
+      # At 20 Hz and max 0.20 m/s the robot moves 10 mm between checks.
+      # 2 cm scene threshold provides 2 check periods of margin before
+      # contact — sufficient for the low-speed HRI scenario.
+      # (4 cm was too conservative, causing constant deceleration when
+      # the gripper operates near the table surface.)
+      check_collisions: true
+      collision_check_rate: 20.0
+      low_latency_mode: false
+      self_collision_proximity_threshold: 0.02
+      scene_collision_proximity_threshold: 0.02
+
+      incoming_command_timeout: 1.0
+      num_outgoing_halt_msgs_to_publish: 4
+      halt_all_joints_in_joint_mode: true
+      halt_all_joints_in_cartesian_mode: true
+      # Singularity thresholds for HRI: custom home [0,-1.2,1.0,-1.37,-pi/2,0]
+      # has shoulder_lift+elbow=-0.2 (close to elbow singularity at 0).
+      # Raised thresholds are safe because:
+      #   - Admittance controller caps twist velocities
+      #   - UR3e hardware joint limits prevent dangerous configurations
+      #   - Human naturally guides away from singular poses
+      lower_singularity_threshold: 250.0
+      hard_stop_singularity_threshold: 500.0
+
+      smoothing_filter_plugin_name: "online_signal_smoothing::ButterworthFilterPlugin"
+      online_signal_smoothing:
+        butterworth_filter_coeff: 3.0
+  
