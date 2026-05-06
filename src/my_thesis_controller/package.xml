@@ -2,16 +2,45 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>my_thesis_controller</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="sundharnishanth@gmail.com">nishanth</maintainer>
-  <license>TODO: License declaration</license>
+  <version>0.1.0</version>
+  <description>Human-robot interaction with force feedback on UR3e — thesis code.</description>
+  <maintainer email="sundharnishanth@gmail.com">Nishanth Sundaran</maintainer>
+  <license>Apache-2.0</license>
 
+  <!-- Core ROS 2 -->
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>action_msgs</depend>
+  <depend>visualization_msgs</depend>
 
+  <!-- TF + transforms -->
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+
+  <!-- MoveIt / control message types -->
+  <depend>moveit_msgs</depend>
+  <depend>control_msgs</depend>
+  <depend>trajectory_msgs</depend>
+
+  <!-- UR / controller manager interfaces -->
+  <depend>ur_dashboard_msgs</depend>
+  <depend>controller_manager_msgs</depend>
+
+  <!-- Vision / point cloud -->
+  <depend>cv_bridge</depend>
+  <depend>sensor_msgs_py</depend>
+
+  <!-- Python packages (apt-installable via rosdep) -->
+  <depend>python3-numpy</depend>
+  <depend>python3-scipy</depend>
+  <depend>python3-opencv</depend>
+  <depend>python3-tk</depend>
+
+  <!-- Run-time tools -->
+  <exec_depend>rviz2</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

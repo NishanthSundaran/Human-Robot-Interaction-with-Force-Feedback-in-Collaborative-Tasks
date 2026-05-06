@@ -96,70 +96,77 @@ RealSense D435i ──► /camera/camera/depth/color/points
                                           MoveIt OctoMap
 ```
 
-## Dependencies
+## Setup (copy-paste, fresh Ubuntu 22.04 + ROS 2 Humble)
 
-### ROS 2 packages installed via apt
-
-```
-sudo apt install \
+```bash
+# 1. ROS 2 Humble + extras
+sudo apt update
+sudo apt install -y \
   ros-humble-moveit \
   ros-humble-moveit-servo \
   ros-humble-moveit-ros-move-group \
   ros-humble-controller-manager \
+  ros-humble-ros2-control \
+  ros-humble-ros2-controllers \
   ros-humble-joint-state-broadcaster \
+  ros-humble-realsense2-description \
   ros-humble-realsense2-camera \
   ros-humble-tf2-ros \
   ros-humble-tf2-geometry-msgs \
   ros-humble-cv-bridge \
   ros-humble-sensor-msgs-py \
   ros-humble-rviz2 \
-  ros-humble-ros-gz-sim \
+  ros-humble-ros-gz \
   ros-humble-ros-gz-bridge \
-  python3-colcon-common-extensions
-```
+  ros-humble-ros-gz-sim \
+  python3-colcon-common-extensions python3-vcstool python3-rosdep
 
-### Python packages
+# 2. Python packages
+pip3 install "numpy<2" "opencv-python<4.11" scipy ultralytics
 
-```
-pip3 install ultralytics opencv-python numpy<2 scipy
-```
-
-(numpy must be `<2` because ROS 2 Humble's `cv_bridge` segfaults under numpy 2.x.)
-
-### Source dependencies (clone into `src/`)
-
-These are not included in this repo; clone them from upstream:
-
-| Package                                 | Purpose                                          |
-|-----------------------------------------|--------------------------------------------------|
-| `Universal_Robots_ROS2_Driver`          | UR hardware driver, `ur_control.launch.py`       |
-| `robot_self_filter`                     | Removes robot links from RealSense point cloud   |
-
-A `dependencies.repos` file is included for `vcs import`:
-
-```
+# 3. Clone + import deps + build
+git clone https://github.com/NishanthSundaran/Human-Robot-Interaction-with-Force-Feedback-in-Collaborative-Tasks.git ~/thesis_ws
+cd ~/thesis_ws
 vcs import src < dependencies.repos
-```
-
-> **Bundled**: `ur_description_gz` (UR3e meshes only) and `robotiq_description`
-> (Robotiq 2F-140 + 2F-85 URDFs and meshes) are included directly in this
-> repo so the launches build out-of-the-box.
->
-> The hardware gripper is controlled via the custom `robotiq_urscript_bridge`
-> node (URCap TCP socket on port 63352), so the full `ros2_robotiq_gripper`
-> driver/controller package is **not** required — only the description.
-
-## Build
-
-```
-cd thesis_share
-vcs import src < dependencies.repos      # pull third-party deps
+sudo rosdep init || true        # ok if already initialised
+rosdep update
 rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install
 source install/setup.bash
 ```
 
+> `numpy` must be **<2** and `opencv-python` **<4.11** because ROS 2
+> Humble's `cv_bridge` segfaults under numpy 2.x and newer OpenCV.
+
+### What's bundled vs. external
+
+| Package                | Source                                 |
+|------------------------|----------------------------------------|
+| `my_thesis_controller` | bundled (this repo)                    |
+| `ur3e_moveit_config`   | bundled (this repo)                    |
+| `ur_description_gz`    | bundled (custom fork, UR3e meshes only)|
+| `robotiq_description`  | bundled (2F-140 + 2F-85 URDFs/meshes)  |
+| `Universal_Robots_ROS2_Driver` | `dependencies.repos` (vcs)     |
+| `robot_self_filter`    | `dependencies.repos` (vcs)             |
+| `realsense2_description` | apt: `ros-humble-realsense2-description` |
+| MoveIt 2 / ros_gz / ros2_control | apt                          |
+
+The hardware gripper is controlled via the custom `robotiq_urscript_bridge`
+node (URCap TCP socket on port 63352), so the full `ros2_robotiq_gripper`
+driver/controller package is **not** required — only the bundled
+`robotiq_description` is needed for URDF/meshes.
+
 ## Run — three launch options
+
+> **Hardware launches (1) and (2) require:** UR3e at the given IP, FT
+> sensor enabled in URCap, RealSense D435i connected, Robotiq 2F-140 with
+> the Robotiq URCap installed and selected as "Controlled by:
+> Robotiq_Grippers" on the teach pendant. Without this hardware they
+> cannot run. Only launch **(3)** runs without hardware.
+>
+> **First sim run** downloads the Gazebo Fuel actor mesh
+> (`https://fuel.gazebosim.org/.../walk.dae`). Internet is required on the
+> first launch; cached in `~/.gz/fuel/` afterward.
 
 ### 1. Hardware (no human-pipeline)
 
