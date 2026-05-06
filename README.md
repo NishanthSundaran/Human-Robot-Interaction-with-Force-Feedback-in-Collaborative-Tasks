@@ -185,6 +185,45 @@ detects sustained contact (GUIDING), and the hybrid controller switches
 from position-hold to admittance compliance. A **double-tap** on the
 gripper signals "place here", triggering descent.
 
+## Debug & tuning tools
+
+The repo ships with a set of GUIs and scripts used during development and
+calibration:
+
+### Debug nodes (in `my_thesis_controller`)
+
+| Node                 | Purpose                                                    |
+|----------------------|------------------------------------------------------------|
+| `force_gui`          | tkinter GUI to inject test wrenches on `/wrench_external` (lets you simulate human pushes without touching the robot). |
+| `hybrid_tuning_gui`  | Live tkinter sliders for runtime tuning of admittance M / D / K-equivalent and damping params via `ros2 param set`. |
+| `safety_monitor`     | ISO/TS 15066 compliance monitor — power & force limiting, speed & separation monitoring, hand-guiding speed cap. Publishes `/proximity/scale`, `/safety/status`. |
+
+Run them stand-alone (after sourcing the workspace):
+
+```
+ros2 run my_thesis_controller force_gui
+ros2 run my_thesis_controller hybrid_tuning_gui
+ros2 run my_thesis_controller safety_monitor
+```
+
+### Calibration scripts (in `scripts/`)
+
+| Script                       | Purpose                                                         |
+|------------------------------|-----------------------------------------------------------------|
+| `scripts/calibrate_doubletap.py` | Records 5 rounds of double-taps from `/wrench_zeroed`, prints recommended values for `nudge_threshold`, `z_score_thresh`, `nudge_cooldown_s`, and `DOUBLE_TAP_WINDOW_S`. |
+| `scripts/test_doubletap.py`     | Stand-alone double-tap detector that subscribes to `/interaction/is_nudge` and prints tap count / gap timing — for verifying the calibrated values. |
+
+Run while a hardware launch is active:
+
+```
+python3 scripts/calibrate_doubletap.py     # 5 rounds × ~6 s each
+python3 scripts/test_doubletap.py          # interactive verifier
+```
+
+The currently calibrated values for the author's tap profile (used in
+`assistive_lift_v4_node.py`) are: `nudge_threshold=4.0 N`,
+`z_score_thresh=2.0`, `nudge_cooldown_s=0.15 s`, `DOUBLE_TAP_WINDOW_S=1.5 s`.
+
 ## Debug topics
 
 | Topic                                      | Purpose                                |
