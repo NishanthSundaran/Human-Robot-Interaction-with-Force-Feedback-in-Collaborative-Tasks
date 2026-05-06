@@ -54,12 +54,17 @@ src/
 │   │   └── assistive_lift_world_hri.sdf               # Gazebo world (walking actor)
 │   ├── package.xml
 │   └── CMakeLists.txt
-└── ur_description_gz/           # Customized fork of UR description (UR3e + camera mount)
-    ├── urdf/                    # ur.urdf.xacro, ur_hardware.urdf.xacro, macros, includes
-    ├── config/ur3e/             # joint_limits, default_kinematics, physical/visual params
-    ├── meshes/ur3e/             # Visual + collision meshes (UR3e only — other variants pruned)
-    ├── package.xml
-    └── CMakeLists.txt
+├── ur_description_gz/           # Customized fork of UR description (UR3e + camera mount)
+│   ├── urdf/                    # ur.urdf.xacro, ur_hardware.urdf.xacro, macros, includes
+│   ├── config/ur3e/             # joint_limits, default_kinematics, physical/visual params
+│   ├── meshes/ur3e/             # Visual + collision meshes (UR3e only — other variants pruned)
+│   ├── package.xml
+│   └── CMakeLists.txt
+└── robotiq_description/         # Robotiq 2F-140 / 2F-85 URDFs + meshes (bundled)
+    ├── urdf/                    # robotiq_2f_140_macro, 2f_140.ros2_control, etc.
+    ├── meshes/{visual,collision}/{2f_140,2f_85}/
+    ├── config/
+    └── package.xml
 scripts/
 ├── calibrate_doubletap.py       # 5-round nudge calibration tool
 └── test_doubletap.py            # double-tap verifier
@@ -129,7 +134,6 @@ These are not included in this repo; clone them from upstream:
 |-----------------------------------------|--------------------------------------------------|
 | `Universal_Robots_ROS2_Driver`          | UR hardware driver, `ur_control.launch.py`       |
 | `robot_self_filter`                     | Removes robot links from RealSense point cloud   |
-| `ros2_robotiq_gripper`                  | Robotiq description (referenced from URDF)       |
 
 A `dependencies.repos` file is included for `vcs import`:
 
@@ -137,9 +141,13 @@ A `dependencies.repos` file is included for `vcs import`:
 vcs import src < dependencies.repos
 ```
 
-> `ur_description_gz` is **bundled** in this repo as a customized fork with
-> hand-eye-mounted RealSense D435i and FT-sensor patch. To minimize size,
-> only UR3e meshes are included (UR5e/UR10e/etc. are pruned).
+> **Bundled**: `ur_description_gz` (UR3e meshes only) and `robotiq_description`
+> (Robotiq 2F-140 + 2F-85 URDFs and meshes) are included directly in this
+> repo so the launches build out-of-the-box.
+>
+> The hardware gripper is controlled via the custom `robotiq_urscript_bridge`
+> node (URCap TCP socket on port 63352), so the full `ros2_robotiq_gripper`
+> driver/controller package is **not** required — only the description.
 
 ## Build
 
