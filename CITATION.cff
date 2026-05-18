@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "Human-Robot Interaction with Force Feedback in Collaborative Tasks"
+authors:
+  - family-names: "Sundaran"
+    given-names: "Nishanth"
+type: thesis
+thesis-type: "Master's thesis"
+institution:
+  name: "Deggendorf Institute of Technology (THD)"
+year: 2026
+url: "https://github.com/NishanthSundaran/Human-Robot-Interaction-with-Force-Feedback-in-Collaborative-Tasks"

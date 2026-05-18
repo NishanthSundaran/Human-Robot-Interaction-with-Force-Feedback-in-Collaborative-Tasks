@@ -1,0 +1,27 @@
+name: colcon build
+on:
+  push:
+    paths:
+      - 'cpp/**'
+      - '.github/workflows/colcon.yml'
+  pull_request:
+    paths:
+      - 'cpp/**'
+      - '.github/workflows/colcon.yml'
+
+jobs:
+  build-cpp:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: humble
+      - name: Build ft_zeroer_cpp
+        shell: bash
+        run: |
+          source /opt/ros/humble/setup.bash
+          mkdir -p _ws/src
+          cp -r cpp/ft_zeroer_cpp _ws/src/
+          cd _ws
+          colcon build --packages-select ft_zeroer_cpp
