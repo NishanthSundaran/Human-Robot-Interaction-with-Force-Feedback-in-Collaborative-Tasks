@@ -155,7 +155,7 @@ ros2 launch ur3e_moveit_config assistive_lift_v4_hardware_hri.launch.py
 ## Credits
 
 - **Author**: Nishanth Sundaran ([GitHub](https://github.com/NishanthSundaran))
-- **Supervisor**: Dima Dobriy ([@dimadobriy](https://github.com/dimadobriy)), THD Research
+- **Supervisor**: Prof. Dr. Dmitrii Dobriborsci ([@dimadobriy](https://github.com/dimadobriy)), THD Research
 - **Hardware**: THD Cham robotics lab
 
 ---
