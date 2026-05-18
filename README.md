@@ -5,7 +5,7 @@ Master's thesis code by **Nishanth Sundaran**.
 ROS 2 Humble implementation of a force-feedback-driven human-robot
 interaction system on a Universal Robots UR3e collaborative robot. The
 robot autonomously perceives and picks an object from a worktable, then
-**hands it off to a human via admittance-based hand-guiding** — letting
+**hands it off to a human via admittance-based hand-guiding**, letting
 the human physically pull the held object to any reachable target. A
 double-tap on the gripper signals "place here" and the robot completes
 the placement. A YOLOv8-segmentation pipeline keeps any human in the
@@ -79,7 +79,7 @@ src/
 ├── ur_description_gz/           # Customized fork of UR description (UR3e + camera mount)
 │   ├── urdf/                    # ur.urdf.xacro, ur_hardware.urdf.xacro, macros, includes
 │   ├── config/ur3e/             # joint_limits, default_kinematics, physical/visual params
-│   ├── meshes/ur3e/             # Visual + collision meshes (UR3e only — other variants pruned)
+│   ├── meshes/ur3e/             # Visual + collision meshes (UR3e only; other variants pruned)
 │   ├── package.xml
 │   └── CMakeLists.txt
 ├── robotiq_description/         # Robotiq 2F-140 / 2F-85 URDFs + meshes (bundled)
@@ -182,10 +182,10 @@ source install/setup.bash
 
 The hardware gripper is controlled via the custom `robotiq_urscript_bridge`
 node (URCap TCP socket on port 63352), so the full `ros2_robotiq_gripper`
-driver/controller package is **not** required — only the bundled
+driver/controller package is **not** required, only the bundled
 `robotiq_description` is needed for URDF/meshes.
 
-## Run — three launch options
+## Run (three launch options)
 
 > **Hardware launches (1) and (2) require:** UR3e at the given IP, FT
 > sensor enabled in URCap, RealSense D435i connected, Robotiq 2F-140 with
@@ -225,7 +225,7 @@ ros2 launch ur3e_moveit_config assistive_lift_v4_hri_sim.launch.py
 ```
 
 Spawns the UR3e in a Gazebo world with a walking actor. Same control
-pipeline as the hardware HRI launch — useful for review without hardware.
+pipeline as the hardware HRI launch; useful for review without hardware.
 
 ## Task flow (the FSM, V4)
 
@@ -251,7 +251,7 @@ calibration:
 |----------------------|------------------------------------------------------------|
 | `force_gui`          | tkinter GUI to inject test wrenches on `/wrench_external` (lets you simulate human pushes without touching the robot). |
 | `hybrid_tuning_gui`  | Live tkinter sliders for runtime tuning of admittance M / D / K-equivalent and damping params via `ros2 param set`. |
-| `safety_monitor`     | ISO/TS 15066 compliance monitor — power & force limiting, speed & separation monitoring, hand-guiding speed cap. Publishes `/proximity/scale`, `/safety/status`. |
+| `safety_monitor`     | ISO/TS 15066 compliance monitor: power & force limiting, speed & separation monitoring, hand-guiding speed cap. Publishes `/proximity/scale`, `/safety/status`. |
 
 Run them stand-alone (after sourcing the workspace):
 
@@ -266,7 +266,7 @@ ros2 run my_thesis_controller safety_monitor
 | Script                       | Purpose                                                         |
 |------------------------------|-----------------------------------------------------------------|
 | `scripts/calibrate_doubletap.py` | Records 5 rounds of double-taps from `/wrench_zeroed`, prints recommended values for `nudge_threshold`, `z_score_thresh`, `nudge_cooldown_s`, and `DOUBLE_TAP_WINDOW_S`. |
-| `scripts/test_doubletap.py`     | Stand-alone double-tap detector that subscribes to `/interaction/is_nudge` and prints tap count / gap timing — for verifying the calibrated values. |
+| `scripts/test_doubletap.py`     | Stand-alone double-tap detector that subscribes to `/interaction/is_nudge` and prints tap count / gap timing, for verifying the calibrated values. |
 
 Run while a hardware launch is active:
 
@@ -298,4 +298,4 @@ Apache 2.0. See LICENSE.
 
 ## Contact
 
-Nishanth Sundaran — sundharnishanth@gmail.com
+Nishanth Sundaran ([sundharnishanth@gmail.com](mailto:sundharnishanth@gmail.com))
