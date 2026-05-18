@@ -82,10 +82,14 @@ src/
 │   ├── meshes/ur3e/             # Visual + collision meshes (UR3e only — other variants pruned)
 │   ├── package.xml
 │   └── CMakeLists.txt
-└── robotiq_description/         # Robotiq 2F-140 / 2F-85 URDFs + meshes (bundled)
-    ├── urdf/                    # robotiq_2f_140_macro, 2f_140.ros2_control, etc.
-    ├── meshes/{visual,collision}/{2f_140,2f_85}/
-    ├── config/
+├── robotiq_description/         # Robotiq 2F-140 / 2F-85 URDFs + meshes (bundled)
+│   ├── urdf/                    # robotiq_2f_140_macro, 2f_140.ros2_control, etc.
+│   ├── meshes/{visual,collision}/{2f_140,2f_85}/
+│   ├── config/
+│   └── package.xml
+└── robot_self_filter/           # leggedrobotics fork (bundled)
+    ├── src/, include/           # C++ self-filter node
+    ├── launch/, params/
     └── package.xml
 scripts/
 ├── calibrate_doubletap.py       # 5-round nudge calibration tool
@@ -141,6 +145,8 @@ sudo apt install -y \
   ros-humble-ros-gz \
   ros-humble-ros-gz-bridge \
   ros-humble-ros-gz-sim \
+  ros-humble-pcl-ros \
+  ros-humble-filters \
   python3-colcon-common-extensions python3-vcstool python3-rosdep
 
 # 2. Python packages
@@ -168,9 +174,10 @@ source install/setup.bash
 | `ur3e_moveit_config`   | bundled (this repo)                    |
 | `ur_description_gz`    | bundled (custom fork, UR3e meshes only)|
 | `robotiq_description`  | bundled (2F-140 + 2F-85 URDFs/meshes)  |
+| `robot_self_filter`    | bundled (leggedrobotics fork)          |
 | `Universal_Robots_ROS2_Driver` | `dependencies.repos` (vcs)     |
-| `robot_self_filter`    | `dependencies.repos` (vcs)             |
 | `realsense2_description` | apt: `ros-humble-realsense2-description` |
+| `pcl_ros`, `filters` (deps of self_filter) | apt              |
 | MoveIt 2 / ros_gz / ros2_control | apt                          |
 
 The hardware gripper is controlled via the custom `robotiq_urscript_bridge`

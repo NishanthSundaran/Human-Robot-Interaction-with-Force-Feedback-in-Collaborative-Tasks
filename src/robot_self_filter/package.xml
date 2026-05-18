@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>robot_self_filter</name>
+  <version>1.0.0</version>
+  <description>Filters the robot's body out of point clouds.</description>
+  <maintainer email="lterenzi@ethz.ch">Lorenzo Terenzi</maintainer>
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/robot_self_filter</url>
+  <author>Eitan Marder-Eppstein</author>
+
+  <!-- Build tool -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Build dependencies -->
+  <build_depend>rclcpp</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>urdf</build_depend>
+  <build_depend>resource_retriever</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>pcl_ros</build_depend>
+  <build_depend>filters</build_depend>  <!-- Add this line -->
+  <!-- or if you require pure PCL, maybe: <build_depend>pcl_conversions</build_depend> -->
+  <build_depend>bullet</build_depend>
+  <build_depend>assimp</build_depend>
+  <build_depend>tinyxml2_vendor</build_depend>
+
+  <!-- Execution dependencies -->
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>tf2</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>urdf</exec_depend>
+  <exec_depend>resource_retriever</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>pcl_ros</exec_depend>
+  <exec_depend>bullet</exec_depend>
+  <exec_depend>assimp</exec_depend>
+  <exec_depend>filters</exec_depend>
+  <exec_depend>tinyxml2_vendor</exec_depend>
+  <!-- Export -->
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

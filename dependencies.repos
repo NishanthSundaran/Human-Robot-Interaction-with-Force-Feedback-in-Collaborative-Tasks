@@ -1,9 +1,7 @@
 repositories:
+  # UR ROS 2 driver (provides ur_robot_driver, ur_moveit_config,
+  # ur_dashboard_msgs, etc.) -- only source dep left after bundling.
   Universal_Robots_ROS2_Driver:
     type: git
     url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git
     version: humble
-  robot_self_filter:
-    type: git
-    url: https://github.com/PR2/robot_self_filter.git
-    version: ros2

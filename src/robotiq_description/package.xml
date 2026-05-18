@@ -23,7 +23,10 @@
   <exec_depend>ros2_controllers</exec_depend>
 
   <exec_depend>joint_state_broadcaster</exec_depend>
-  <exec_depend>parallel_gripper_controller</exec_depend>
+  <!-- parallel_gripper_controller removed: only exists on ROS distros newer
+       than Humble, and gripper control here goes through robotiq_urscript_bridge
+       (URCap TCP), not ros2_control. -->
+
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
