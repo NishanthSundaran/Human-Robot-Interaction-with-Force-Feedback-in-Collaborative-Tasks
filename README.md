@@ -215,7 +215,7 @@ Same as (1) plus the YOLOv8-seg human-exclusion pipeline so MoveIt's
 OctoMap ignores any human in the workspace. Diagnostic image is published
 on `/human_excluded_cloud_filter/debug_image`.
 
-### 3. Simulation (Gazebo Ignition, vanilla)
+### 3. Simulation (Gazebo Ignition, no human pipeline)
 
 ```
 ros2 launch ur3e_moveit_config assistive_lift_v4_sim.launch.py
