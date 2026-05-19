@@ -15,6 +15,7 @@
   <depend>std_srvs</depend>
   <depend>action_msgs</depend>
   <depend>visualization_msgs</depend>
+  <depend>shape_msgs</depend>
 
   <!-- TF + transforms -->
   <depend>tf2_ros</depend>

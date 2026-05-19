@@ -5,7 +5,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
 install(
-  DIRECTORY config launch srdf meshes worlds
+  DIRECTORY config launch srdf worlds
   DESTINATION share/${PROJECT_NAME}
 )
 
