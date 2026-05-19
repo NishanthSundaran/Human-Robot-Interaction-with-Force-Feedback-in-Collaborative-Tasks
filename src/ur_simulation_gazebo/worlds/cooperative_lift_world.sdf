@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="cooperative_lift_world">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Required Ignition systems -->
+    <plugin filename="ignition-gazebo-forcetorque-system"
+            name="ignition::gazebo::systems::ForceTorque"/>
+    <plugin filename="ignition-gazebo-physics-system"
+            name="ignition::gazebo::systems::Physics"/>
+    <plugin filename="ignition-gazebo-user-commands-system"
+            name="ignition::gazebo::systems::UserCommands"/>
+    <plugin filename="ignition-gazebo-scene-broadcaster-system"
+            name="ignition::gazebo::systems::SceneBroadcaster"/>
+    <plugin filename="ignition-gazebo-contact-system"
+            name="ignition::gazebo::systems::Contact"/>
+    <plugin filename="ignition-gazebo-forcetorque-system"
+            name="ignition::gazebo::systems::ForceTorque"/>
+    <plugin filename="ignition-gazebo-apply-link-wrench-system"
+            name="ignition::gazebo::systems::ApplyLinkWrench"/>
+    <plugin filename="ignition-gazebo-sensors-system"
+            name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="ignition-gazebo-imu-system"
+            name="ignition::gazebo::systems::Imu"/>
+
+    <!-- Ground plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!--
+      Graspable box: 6cm cube, 0.5 kg, orange.
+      Robot base_link +X maps to world +Y (90-degree rotation).
+      base_link grasp pose [0.25, 0.0, 0.08] => world [0.0, 0.25, 0.08].
+      Box centre at half-height above table (robot base at z=0 in world).
+    -->
+    <model name="grasp_box">
+      <pose>0.0 0.25 0.03 0 0 0</pose>
+      <link name="box_link">
+        <inertial>
+          <mass>0.5</mass>
+          <inertia>
+            <ixx>0.00025</ixx>
+            <iyy>0.00025</iyy>
+            <izz>0.00025</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <box><size>0.06 0.06 0.06</size></box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.06 0.06 0.06</size></box>
+          </geometry>
+          <material>
+            <ambient>1.0 0.5 0.0 1</ambient>
+            <diffuse>1.0 0.5 0.0 1</diffuse>
+            <specular>0.3 0.15 0.0 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!--
+      Fixture wall: static thin wall as visual reference for placement target.
+      Transport pose in base_link [0.25, 0.15, 0.25] => world [-0.15, 0.25, 0.25].
+      Place the fixture wall a bit beyond the transport target in -X (world).
+    -->
+    <model name="fixture_wall">
+      <static>true</static>
+      <pose>-0.25 0.25 0.10 0 0 0</pose>
+      <link name="wall_link">
+        <collision name="collision">
+          <geometry>
+            <box><size>0.02 0.20 0.20</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.02 0.20 0.20</size></box>
+          </geometry>
+          <material>
+            <ambient>0.4 0.4 0.6 1</ambient>
+            <diffuse>0.4 0.4 0.6 1</diffuse>
+            <specular>0.2 0.2 0.3 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

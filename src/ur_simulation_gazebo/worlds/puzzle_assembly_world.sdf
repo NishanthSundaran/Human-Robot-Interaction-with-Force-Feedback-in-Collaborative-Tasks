@@ -1,0 +1,254 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="puzzle_assembly_world">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Required Ignition systems -->
+    <plugin filename="ignition-gazebo-forcetorque-system"
+            name="ignition::gazebo::systems::ForceTorque"/>
+    <plugin filename="ignition-gazebo-physics-system"
+            name="ignition::gazebo::systems::Physics"/>
+    <plugin filename="ignition-gazebo-user-commands-system"
+            name="ignition::gazebo::systems::UserCommands"/>
+    <plugin filename="ignition-gazebo-scene-broadcaster-system"
+            name="ignition::gazebo::systems::SceneBroadcaster"/>
+    <plugin filename="ignition-gazebo-contact-system"
+            name="ignition::gazebo::systems::Contact"/>
+    <plugin filename="ignition-gazebo-apply-link-wrench-system"
+            name="ignition::gazebo::systems::ApplyLinkWrench"/>
+    <plugin filename="ignition-gazebo-sensors-system"
+            name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="ignition-gazebo-imu-system"
+            name="ignition::gazebo::systems::Imu"/>
+
+    <!-- Ambient light -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Robot table: 0.9 x 0.7 x 0.66m — extended to cover 55cm reach -->
+    <model name="robot_table">
+      <static>true</static>
+      <pose>-0.15 0 0.33 0 0 0</pose>
+      <link name="table_link">
+        <collision name="collision">
+          <geometry><box><size>0.9 0.7 0.66</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.9 0.7 0.66</size></box></geometry>
+          <material>
+            <ambient>0.55 0.55 0.55 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!--
+      Assembly target marker: thin transparent plate showing where cube goes.
+      Robot table top at z=0.66. Marker at surface level.
+      In Gazebo frame: x = -base_y, y = base_x
+      Target: base_link (0.0, 0.35, 0.0) → world (-0.35, 0.0, 0.66)
+    -->
+    <model name="assembly_target">
+      <static>true</static>
+      <pose>-0.35 0.0 0.661 0 0 0</pose>
+      <link name="marker_link">
+        <visual name="visual">
+          <geometry><box><size>0.08 0.08 0.002</size></box></geometry>
+          <material>
+            <ambient>0.0 1.0 0.0 0.3</ambient>
+            <diffuse>0.0 1.0 0.0 0.3</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!--
+      Puzzle pieces: 4 pieces of a 75mm cube.
+      All on the robot table (surface z=0.66 in world, z=0.0 in base_link).
+      Coordinate mapping: base_x = world_y, base_y = -world_x, base_z = world_z - 0.66
+      Pieces at ~0.30m from robot base — well within 55cm reach.
+    -->
+
+    <!-- Piece A (green): 50x50x25mm, mass ~30g -->
+    <model name="puzzle_piece_A">
+      <static>false</static>
+      <pose>-0.4397 0.0479 0.6725 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.030</mass>
+          <inertia>
+            <ixx>0.000008</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.000008</iyy><iyz>0</iyz>
+            <izz>0.000006</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>file:///home/prapanch/ros2_ws/src/ur3e_moveit_config/meshes/puzzle_pieces/piece_A.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>file:///home/prapanch/ros2_ws/src/ur3e_moveit_config/meshes/puzzle_pieces/piece_A.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.18 0.74 0.42 1</ambient>
+            <diffuse>0.20 0.82 0.48 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Piece B (red): 50x50x50mm, mass ~50g -->
+    <model name="puzzle_piece_B">
+      <static>false</static>
+      <pose>-0.3114 0.2245 0.685 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.050</mass>
+          <inertia>
+            <ixx>0.000021</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.000021</iyy><iyz>0</iyz>
+            <izz>0.000021</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>file:///home/prapanch/ros2_ws/src/ur3e_moveit_config/meshes/puzzle_pieces/piece_B.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>file:///home/prapanch/ros2_ws/src/ur3e_moveit_config/meshes/puzzle_pieces/piece_B.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.90 0.20 0.20 1</ambient>
+            <diffuse>0.95 0.25 0.25 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Piece C (yellow): 75x75x50mm, mass ~75g -->
+    <model name="puzzle_piece_C">
+      <static>false</static>
+      <pose>-0.3000 0.1045 0.685 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.075</mass>
+          <inertia>
+            <ixx>0.000055</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.000055</iyy><iyz>0</iyz>
+            <izz>0.000070</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>file:///home/prapanch/ros2_ws/src/ur3e_moveit_config/meshes/puzzle_pieces/piece_C.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>file:///home/prapanch/ros2_ws/src/ur3e_moveit_config/meshes/puzzle_pieces/piece_C.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.95 0.85 0.15 1</ambient>
+            <diffuse>0.98 0.90 0.20 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Piece D (blue): 75x75x75mm, mass ~100g -->
+    <model name="puzzle_piece_D">
+      <static>false</static>
+      <pose>-0.4223 0.1940 0.6975 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.100</mass>
+          <inertia>
+            <ixx>0.000094</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.000094</iyy><iyz>0</iyz>
+            <izz>0.000094</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <mesh>
+              <uri>file:///home/prapanch/ros2_ws/src/ur3e_moveit_config/meshes/puzzle_pieces/piece_D.stl</uri>
+            </mesh>
+          </geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>file:///home/prapanch/ros2_ws/src/ur3e_moveit_config/meshes/puzzle_pieces/piece_D.stl</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <ambient>0.15 0.35 0.85 1</ambient>
+            <diffuse>0.20 0.40 0.90 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
