@@ -72,9 +72,14 @@
 
 ## Task FSM
 
-`INIT` → `PERCEIVE` → `PLAN_GRASP` → `MOVE_TO_PREGRASP` → `GRASP` → `LIFT` →
-`AWAIT_INTERACTION` *(human guides via admittance)* → *(double-tap)* →
-`PREP_PLACE` → `DESCEND` → `PLACE` → `RETREAT` → `DONE`
+`INIT` → `PERCEIVE` → `PLAN_GRASP` → `MOVE_TO_PREGRASP` → `MOVE_TO_GRASP` → `GRASP` → `LIFT` →
+`ENABLE_SERVO` → `AWAIT_INTERACTION` *(human guides via admittance)* → *(double-tap)* →
+`PREP_PLACE` → `DESCEND_TO_PLACE` → `PLACE` → `RETRACT` → `DONE`
+
+During **AWAIT_INTERACTION**, the human grabs the tool, the classifier
+detects sustained contact (GUIDING), and the hybrid controller switches
+from position-hold to admittance compliance. A **double-tap** on the
+gripper signals "place here", triggering the descent.
 
 ---
 
@@ -105,39 +110,130 @@ cpp/
 
 ---
 
-## Quickstart
+## Hardware
 
-### Prerequisites
+- **Robot**: Universal Robots UR3e (with built-in F/T sensor)
+- **Gripper**: Robotiq 2F-140 (controlled via URCap TCP socket)
+- **Camera**: Intel RealSense D435i (hand-eye calibrated)
+- **OS / middleware**: Ubuntu 22.04, ROS 2 Humble
 
-- Ubuntu 22.04 + ROS 2 Humble
-- UR3e with F/T sensor (URCap configured) and Robotiq 2F-140 gripper
-- Intel RealSense D435i
+## Setup (copy-paste, fresh Ubuntu 22.04 + ROS 2 Humble)
 
 ```bash
-sudo apt install ros-humble-moveit ros-humble-moveit-servo \
-  ros-humble-ros2-control ros-humble-realsense2-camera
+# 1. ROS 2 Humble + extras
+sudo apt update
+sudo apt install -y \
+  ros-humble-moveit \
+  ros-humble-moveit-servo \
+  ros-humble-moveit-ros-move-group \
+  ros-humble-controller-manager \
+  ros-humble-ros2-control \
+  ros-humble-ros2-controllers \
+  ros-humble-joint-state-broadcaster \
+  ros-humble-realsense2-description \
+  ros-humble-realsense2-camera \
+  ros-humble-tf2-ros \
+  ros-humble-tf2-geometry-msgs \
+  ros-humble-cv-bridge \
+  ros-humble-sensor-msgs-py \
+  ros-humble-rviz2 \
+  ros-humble-ros-gz \
+  ros-humble-ros-gz-bridge \
+  ros-humble-ros-gz-sim \
+  ros-humble-pcl-ros \
+  ros-humble-filters \
+  python3-colcon-common-extensions python3-vcstool python3-rosdep
+
+# 2. Python packages
 pip3 install "numpy<2" "opencv-python<4.11" scipy ultralytics
-```
 
-### Build
-
-```bash
-git clone https://github.com/NishanthSundaran/Human-Robot-Interaction-with-Force-Feedback-in-Collaborative-Tasks.git ~/thesis_ws/src/thesis
+# 3. Clone + import deps + build
+git clone https://github.com/NishanthSundaran/Human-Robot-Interaction-with-Force-Feedback-in-Collaborative-Tasks.git ~/thesis_ws
 cd ~/thesis_ws
-vcs import src < src/thesis/dependencies.repos
+vcs import src < dependencies.repos
+sudo rosdep init || true        # ok if already initialised
+rosdep update
 rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install
+source install/setup.bash
 ```
 
-### Run
+> `numpy` must be **<2** and `opencv-python` **<4.11** because ROS 2
+> Humble's `cv_bridge` segfaults under numpy 2.x and newer OpenCV.
 
-```bash
-# Simulation (Gazebo Ignition, no hardware required)
+### What's bundled vs. external
+
+| Package                | Source                                 |
+|------------------------|----------------------------------------|
+| `my_thesis_controller` | bundled (this repo)                    |
+| `ur3e_moveit_config`   | bundled (this repo)                    |
+| `ur_description_gz`    | bundled (custom fork, UR3e meshes only)|
+| `robotiq_description`  | bundled (2F-140 + 2F-85 URDFs/meshes)  |
+| `robot_self_filter`    | bundled (leggedrobotics fork)          |
+| `ur_simulation_gazebo` | bundled (sim worlds + bring-up launch) |
+| `Universal_Robots_ROS2_Driver` | `dependencies.repos` (vcs)     |
+| `realsense2_description` | apt: `ros-humble-realsense2-description` |
+| `pcl_ros`, `filters` (deps of self_filter) | apt              |
+| MoveIt 2 / ros_gz / ros2_control | apt                          |
+
+The hardware gripper is controlled via the custom `robotiq_urscript_bridge`
+node (URCap TCP socket on port 63352), so the full `ros2_robotiq_gripper`
+driver/controller package is **not** required; only the bundled
+`robotiq_description` is needed for URDF/meshes.
+
+## Run (four launch options)
+
+> **Hardware launches (1) and (2) require:** UR3e at the given IP, FT
+> sensor enabled in URCap, RealSense D435i connected, Robotiq 2F-140 with
+> the Robotiq URCap installed and selected as "Controlled by:
+> Robotiq_Grippers" on the teach pendant. Without this hardware they
+> cannot run. The two simulation launches **(3)** and **(4)** run without
+> any hardware.
+>
+> **First HRI sim run** downloads the Gazebo Fuel walking-actor mesh
+> (`https://fuel.gazebosim.org/.../walk.dae`). Internet is required on
+> the first launch; the asset is cached in `~/.gz/fuel/` afterward.
+
+### 1. Hardware (no human pipeline)
+
+```
+ros2 launch ur3e_moveit_config assistive_lift_v4_hardware.launch.py \
+  ur_type:=ur3e robot_ip:=192.168.123.3
+```
+
+Bring up real UR3e + Robotiq + RealSense. **Press *Play* on the teach
+pendant** when the driver prompts.
+
+### 2. Hardware + human detection / exclusion
+
+```
+ros2 launch ur3e_moveit_config assistive_lift_v4_hardware_hri.launch.py \
+  ur_type:=ur3e robot_ip:=192.168.123.3
+```
+
+Same as (1) plus the YOLOv8-seg human-exclusion pipeline so MoveIt's
+OctoMap ignores any human in the workspace. Diagnostic image is published
+on `/human_excluded_cloud_filter/debug_image`.
+
+### 3. Simulation (Gazebo Ignition, vanilla)
+
+```
 ros2 launch ur3e_moveit_config assistive_lift_v4_sim.launch.py
-
-# Real hardware
-ros2 launch ur3e_moveit_config assistive_lift_v4_hardware_hri.launch.py
 ```
+
+Spawns the UR3e in a static Gazebo Ignition world for the full pick →
+guide → place task. No walking actor, no human-exclusion pipeline.
+Useful as a smoke test or first demo without hardware.
+
+### 4. Simulation (Gazebo Ignition + HRI)
+
+```
+ros2 launch ur3e_moveit_config assistive_lift_v4_hri_sim.launch.py
+```
+
+Same as (3) plus a walking human actor in the world and the full
+human-exclusion pipeline (`robot_self_filter` → `human_excluded_cloud_filter`
+→ `octomap_gate`). Closest to (2) without hardware.
 
 ---
 
@@ -152,9 +248,63 @@ ros2 launch ur3e_moveit_config assistive_lift_v4_hardware_hri.launch.py
 
 ---
 
+## Debug & tuning tools
+
+The repo ships with a set of GUIs and scripts used during development and
+calibration.
+
+### Debug nodes (in `my_thesis_controller`)
+
+| Node                 | Purpose                                                    |
+|----------------------|------------------------------------------------------------|
+| `force_gui`          | tkinter GUI to inject test wrenches on `/wrench_external` (lets you simulate human pushes without touching the robot). |
+| `hybrid_tuning_gui`  | Live tkinter sliders for runtime tuning of admittance M / D and damping params via `ros2 param set`. |
+| `safety_monitor`     | ISO/TS 15066 compliance monitor: power & force limiting, speed & separation monitoring, hand-guiding speed cap. Publishes `/proximity/scale`, `/safety/status`. |
+
+Run them stand-alone (after sourcing the workspace):
+
+```
+ros2 run my_thesis_controller force_gui
+ros2 run my_thesis_controller hybrid_tuning_gui
+ros2 run my_thesis_controller safety_monitor
+```
+
+### Calibration scripts (in `scripts/`)
+
+| Script                            | Purpose                                                                                          |
+|-----------------------------------|--------------------------------------------------------------------------------------------------|
+| `scripts/calibrate_doubletap.py`  | Records 5 rounds of double-taps from `/wrench_zeroed`, prints recommended values for `nudge_threshold`, `z_score_thresh`, `nudge_cooldown_s`, and `DOUBLE_TAP_WINDOW_S`. |
+| `scripts/test_doubletap.py`       | Stand-alone double-tap detector that subscribes to `/interaction/is_nudge` and prints tap count / gap timing for verifying the calibrated values. |
+
+Run while a hardware launch is active:
+
+```
+python3 scripts/calibrate_doubletap.py     # 5 rounds, ~6 s each
+python3 scripts/test_doubletap.py          # interactive verifier
+```
+
+The calibrated values currently baked into `assistive_lift_v4_node.py`
+for the author's tap profile are: `nudge_threshold=4.0 N`,
+`z_score_thresh=2.0`, `nudge_cooldown_s=0.15 s`, `DOUBLE_TAP_WINDOW_S=1.5 s`.
+
+## Debug topics
+
+| Topic                                      | Purpose                                |
+|--------------------------------------------|----------------------------------------|
+| `/wrench_zeroed`                           | Bias-corrected F/T from UR3e sensor    |
+| `/interaction_state`                       | IDLE / GUIDING / NUDGE                 |
+| `/effective_interaction_state`             | Debounced GUIDING state                |
+| `/servo_node/delta_twist_cmds`             | Velocity commands to MoveIt Servo      |
+| `/cloud_no_robot`                          | Self-filtered cloud                    |
+| `/cloud_no_human`                          | Human-excluded cloud (YOLOv8-seg)      |
+| `/cloud_gated`                             | Cloud delivered to OctoMap             |
+| `/human_excluded_cloud_filter/debug_image` | RGB with detected person overlay       |
+
+---
+
 ## Credits
 
-- **Author**: Nishanth Sundaran ([GitHub](https://github.com/NishanthSundaran))
+- **Author**: Nishanth Sundaran ([GitHub](https://github.com/NishanthSundaran), [sundharnishanth@gmail.com](mailto:sundharnishanth@gmail.com))
 - **Supervisor**: Prof. Dr. Dmitrii Dobriborsci ([@dimadobriy](https://github.com/dimadobriy)), THD Research
 - **Hardware**: THD Cham robotics lab
 
