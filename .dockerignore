@@ -1,0 +1,17 @@
+# Keep the build context small and reproducible.
+build/
+install/
+log/
+.git/
+**/__pycache__/
+**/*.pyc
+*.egg-info/
+
+# Demo media is only for the README, not needed at runtime (~13 MB).
+media/
+
+# Editor / OS cruft
+.vscode/
+.idea/
+*.swp
+.DS_Store

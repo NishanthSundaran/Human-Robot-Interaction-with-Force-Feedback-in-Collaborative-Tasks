@@ -1,0 +1,41 @@
+# Convenience wrapper around docker/Dockerfile.
+#
+#   docker compose -f docker/docker-compose.yml build
+#   xhost +local:docker
+#   docker compose -f docker/docker-compose.yml run --rm thesis \
+#       ros2 launch ur3e_moveit_config assistive_lift_v4_hri_sim.launch.py
+#
+# Requires Docker Compose v2 and the NVIDIA Container Toolkit.
+
+services:
+  thesis:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: thesis:latest
+    container_name: thesis
+    # UR3e network + ROS DDS discovery on the host network.
+    network_mode: host
+    ipc: host
+    # RealSense USB passthrough.
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      - XDG_RUNTIME_DIR=/tmp/runtime-root
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev:/dev
+      - ${HOME}/.gz:/root/.gz   # persist Gazebo Fuel cache between runs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    stdin_open: true
+    tty: true
+    command: bash

@@ -98,7 +98,15 @@ src/
 │   └── safety_monitor.py               ISO/TS 15066 SSM + PFL supervisor
 ├── ur3e_moveit_config/                MoveIt 2 configs and launch files
 ├── ur_description_gz/                 Customised UR3e URDF and meshes
-└── robotiq_description/               Robotiq 2F-140/-85 URDF and meshes
+├── robotiq_description/               Robotiq 2F-140/-85 URDF and meshes
+├── robot_self_filter/                 Robot self-filter (point cloud)
+└── ur_simulation_gazebo/              Gazebo Ignition sim worlds
+
+docker/
+├── Dockerfile                         CUDA + ROS 2 Humble, full workspace baked in
+├── run.sh                             GPU + X11 + RealSense USB + UR network
+├── docker-compose.yml                 Compose alternative to run.sh
+└── entrypoint.sh                      Sources ROS + workspace
 
 scripts/
 ├── calibrate_doubletap.py             5-round tap threshold calibration
@@ -180,6 +188,46 @@ The hardware gripper is controlled via the custom `robotiq_urscript_bridge`
 node (URCap TCP socket on port 63352), so the full `ros2_robotiq_gripper`
 driver/controller package is **not** required; only the bundled
 `robotiq_description` is needed for URDF/meshes.
+
+## Docker (sim + hardware)
+
+A self-contained Docker image is provided that bakes the whole workspace
+(ROS 2 Humble desktop, MoveIt 2, Gazebo Ignition, the UR driver, and all
+thesis packages) on top of a CUDA + cuDNN base, so YOLOv8 runs on GPU and
+RViz / Gazebo render with GPU acceleration.
+
+**Host requirements**: Linux, Docker, and the
+[NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
+
+```bash
+# Build the image (workspace is compiled during the build)
+git clone https://github.com/NishanthSundaran/Human-Robot-Interaction-with-Force-Feedback-in-Collaborative-Tasks.git ~/thesis_ws
+cd ~/thesis_ws
+docker build -f docker/Dockerfile -t thesis:latest .
+```
+
+`docker/run.sh` wires up GPU, host networking (to reach the UR3e), the
+RealSense USB passthrough, and the X11 socket for the GUI:
+
+```bash
+# Simulation (no hardware needed)
+./docker/run.sh ros2 launch ur3e_moveit_config assistive_lift_v4_hri_sim.launch.py
+
+# Hardware (UR3e + Robotiq + RealSense plugged into the host)
+./docker/run.sh ros2 launch ur3e_moveit_config assistive_lift_v4_hardware_hri.launch.py \
+  ur_type:=ur3e robot_ip:=192.168.123.3
+
+# Interactive shell inside the container
+./docker/run.sh
+```
+
+A `docker/docker-compose.yml` is also included as an alternative to the
+run script.
+
+> The same caveats apply as on a native install: hardware launches need
+> the physical UR3e + Robotiq URCap + RealSense, and the first HRI sim
+> run downloads the Gazebo Fuel actor mesh (cached in `~/.gz`, which the
+> run script bind-mounts so it persists between containers).
 
 ## Run (four launch options)
 
