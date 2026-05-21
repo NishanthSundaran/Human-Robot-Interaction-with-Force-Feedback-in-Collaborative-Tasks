@@ -7,7 +7,13 @@ if [ -f /thesis_ws/install/setup.bash ]; then
     source /thesis_ws/install/setup.bash
 fi
 
-# Gazebo Fuel cache (walking actor mesh) lives here; persists if mounted.
-export GZ_FUEL_CACHE_PATH="${GZ_FUEL_CACHE_PATH:-/root/.gz/fuel}"
+# Gazebo Fortress caches Fuel assets (the walking-actor mesh) under
+# ~/.ignition/fuel. Mount /root/.ignition (see run.sh) to persist it.
+export IGN_FUEL_CACHE_PATH="${IGN_FUEL_CACHE_PATH:-/root/.ignition/fuel}"
+
+# Some Qt/GL apps need XDG_RUNTIME_DIR to exist with sane perms.
+if [ -n "${XDG_RUNTIME_DIR}" ] && [ ! -d "${XDG_RUNTIME_DIR}" ]; then
+    mkdir -p "${XDG_RUNTIME_DIR}" && chmod 700 "${XDG_RUNTIME_DIR}"
+fi
 
 exec "$@"

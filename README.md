@@ -226,8 +226,8 @@ run script.
 
 > The same caveats apply as on a native install: hardware launches need
 > the physical UR3e + Robotiq URCap + RealSense, and the first HRI sim
-> run downloads the Gazebo Fuel actor mesh (cached in `~/.gz`, which the
-> run script bind-mounts so it persists between containers).
+> run downloads the Gazebo Fuel actor mesh (cached in `~/.ignition`, which
+> the run script bind-mounts so it persists between containers).
 
 ## Run (four launch options)
 
@@ -240,7 +240,7 @@ run script.
 >
 > **First HRI sim run** downloads the Gazebo Fuel walking-actor mesh
 > (`https://fuel.gazebosim.org/.../walk.dae`). Internet is required on
-> the first launch; the asset is cached in `~/.gz/fuel/` afterward.
+> the first launch; the asset is cached in `~/.ignition/fuel/` afterward.
 
 ### 1. Hardware (no human pipeline)
 

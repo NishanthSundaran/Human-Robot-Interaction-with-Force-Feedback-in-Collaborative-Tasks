@@ -56,6 +56,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ros-humble-ros-gz \
         ros-humble-ros-gz-bridge \
         ros-humble-ros-gz-sim \
+        ignition-tools \
         ros-humble-pcl-ros \
         ros-humble-filters \
         python3-colcon-common-extensions \

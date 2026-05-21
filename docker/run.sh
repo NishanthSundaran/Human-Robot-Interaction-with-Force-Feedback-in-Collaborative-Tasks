@@ -30,7 +30,7 @@ docker run -it --rm \
     -e XDG_RUNTIME_DIR=/tmp/runtime-root \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v /dev:/dev \
-    -v "${HOME}/.gz:/root/.gz" \
+    -v "${HOME}/.ignition:/root/.ignition" \
     "${IMAGE}" \
     "$@"
 

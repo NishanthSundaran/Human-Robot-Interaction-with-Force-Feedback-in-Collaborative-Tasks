@@ -28,7 +28,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /dev:/dev
-      - ${HOME}/.gz:/root/.gz   # persist Gazebo Fuel cache between runs
+      - ${HOME}/.ignition:/root/.ignition   # persist Gazebo Fortress Fuel cache
     deploy:
       resources:
         reservations:
