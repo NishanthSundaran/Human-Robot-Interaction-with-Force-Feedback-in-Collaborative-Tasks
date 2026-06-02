@@ -231,16 +231,61 @@ run script.
 
 ## Run (four launch options)
 
-> **Hardware launches (1) and (2) require:** UR3e at the given IP, FT
-> sensor enabled in URCap, RealSense D435i connected, Robotiq 2F-140 with
-> the Robotiq URCap installed and selected as "Controlled by:
-> Robotiq_Grippers" on the teach pendant. Without this hardware they
-> cannot run. The two simulation launches **(3)** and **(4)** run without
-> any hardware.
+> **Hardware launches (1) and (2) require** the physical UR3e at the
+> given IP plus the teach-pendant setup below. Sim launches (3) and (4)
+> run without any hardware.
 >
 > **First HRI sim run** downloads the Gazebo Fuel walking-actor mesh
 > (`https://fuel.gazebosim.org/.../walk.dae`). Internet is required on
 > the first launch; the asset is cached in `~/.ignition/fuel/` afterward.
+
+### Hardware checklist (one-time + before each hardware launch)
+
+If the driver dies during `ros2 launch` with
+`URPositionHardwareInterface: Could not get configuration package within
+timeout`, one of the items below is the cause. **Dashboard connects on
+TCP/IP, but the ROS driver also needs the External Control URCap to be
+running on the teach pendant.** A one-second timeout race makes it look
+intermittent.
+
+**One-time setup on the teach pendant**
+
+1. **Install the External Control URCap.** Settings → System → URCaps,
+   add `externalcontrol-x.y.z.urcap` (from the
+   [Universal_Robots_ROS2_Driver](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver)
+   release page). Reboot the teach pendant after install.
+2. **Install the Robotiq URCap** (`Robotiq_Grippers-x.y.z.urcap`) for the
+   2F-140 gripper. After install, on the teach pendant set
+   *Installation → URCaps → Robotiq Grippers → Controlled by:
+   `Robotiq_Grippers`*.
+3. **Create a UR program containing one node**: External Control.
+   Set the host IP to the **laptop** running ROS (not the robot's own IP)
+   and the port to **50002**. Save the program.
+4. **Calibrate the F/T sensor.** Installation → URCaps → Force/Torque
+   sensor → run the zero-offset routine. The ROS `ft_zeroer` then
+   removes residual bias each run.
+
+**Every time, before `ros2 launch`**
+
+1. Power on the robot, release brakes (Initialize Robot → Start).
+2. Set the teach pendant to **Remote Control** (top-right corner;
+   Local mode blocks the URCap).
+3. Open the External Control program in the file browser (don't press
+   Play yet).
+4. From the host, confirm the network: `ping 192.168.123.3` should
+   reply.
+5. Run the launch command. When you see
+   `URPositionHardwareInterface: Connection to robot opened`,
+   **immediately press *Play*** on the teach pendant. The 1 s configure
+   timeout is short; pressing Play right after the connect message is
+   what makes it reliable.
+6. The launch will then activate `scaled_joint_trajectory_controller`
+   and `forward_velocity_controller` and proceed.
+
+If the launch still times out, the most common causes (in order):
+robot is in Local mode, External Control URCap not in the loaded
+program, wrong host-IP on the URCap, or the F/T URCap not present
+(driver errors on the missing F/T topic).
 
 ### 1. Hardware (no human pipeline)
 
